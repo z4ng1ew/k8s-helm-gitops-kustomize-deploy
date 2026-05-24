@@ -14,6 +14,10 @@
 ![alt text](<img/1/image copy.png>)
 
 
+![alt text](<img/1/image copy 8.png>)
+
+
+В default  остался   Service kubernetes (это сам API-сервер k8s, его не трогаем) 
 
 
 ## 2. Перенести манифесты из предыдущих блоков.
@@ -23,7 +27,7 @@
 ![alt text](<img/1/image copy 2.png>)
 
 
-
+![alt text](<img/1/image copy 9.png>)
 
 
 
@@ -195,11 +199,11 @@ replicas-patch.yaml — патч, увеличивающий gateway до 3 ре
 
 
 
+![alt text](<img/1/image copy 9.png>)
 
 
 
-
-
+**все файлы в /home/s/do_12/src/kustomize/base**
 
 
 
@@ -213,19 +217,23 @@ replicas-patch.yaml — патч, увеличивающий gateway до 3 ре
 
 
 
+![alt text](<img/1/image copy 10.png>)
+
+```
+kustomize build overlays/production | head -50
+```
 
 
 
+![alt text](<img/1/image copy 11.png>)
+
+```
+kustomize build overlays/production | grep -A 3 "name: gateway-service" | head -20
+```
 
 
 
-
-
-
-
-
-
-
+вывод kustomize build + grep gateway-service показывает replicas: 3 рядом с name: gateway-service.
 
 
 
