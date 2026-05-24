@@ -1,10 +1,3 @@
-## Part 0. ПОДГОТОВКА. Создание трёх виртуальных машин
-
-
-
-
-
-
 ## Part 1. Развертывание приложения с помощью Kustomize
 
  **Задание**
@@ -18,6 +11,10 @@
 
 
 В default  остался   Service kubernetes (это сам API-сервер k8s, его не трогаем) 
+
+Очистил namespace default от приложения DO11, чтобы не конфликтовало с DO12
+
+
 
 
 ## 2. Перенести манифесты из предыдущих блоков.
@@ -127,13 +124,16 @@
 
 /home/s/do_12/src/kustomize/base/kustomization.yaml
 
-**Главный файл Kustomize. Он говорит: «вот эти YAML-файлы — части моей базы».**
+**Главный файл Kustomize. Он говорит: «вот эти YAML-файлы — части моей базы» (то, что одинаково для всех окружений: dev, staging, production).**
+
+перечислены все 11 манифестов
 
 apiVersion и kind — обязательные «маркеры», что это файл Kustomize. resources — список файлов, которые нужно объединить. Кастомайз их склеит и применит к кластеру всё сразу.
 
 
 
-
+ - apiVersion и kind — обязательные маркеры, что это файл Kustomize
+ - resources — список манифестов, которые будут объединены в одну сборку
 
 
 
@@ -184,7 +184,7 @@ replicas-patch.yaml — патч, увеличивающий gateway до 3 ре
 
 
 
-
+**Оверлей добавляет ConfigMap, Secret и патч на 3 реплики для gateway.**
 
 
 
@@ -238,6 +238,68 @@ kustomize build overlays/production | grep -A 3 "name: gateway-service" | head -
 
 
 
+Патч применился, gateway-service получит 3 реплики, остальные — по 1. final-manifest.yaml собран (764 строки, 17 КБ). Можно применять.
+
+
+
+доказательство пункта 6 методички («модифицирует количество реплик для gateway service до 3 реплик»).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+![alt text](<img/1/image copy 13.png>)
+
+[text](kustomize/final-manifest.yaml)
+
+/home/s/do_12/src/kustomize/final-manifest.yaml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -249,6 +311,58 @@ kustomize build overlays/production | grep -A 3 "name: gateway-service" | head -
 
 
 ## 8. Запустить функциональные тесты Postman и удостовериться в работоспособности приложения.
+
+
+
+
+![alt text](<img/1/image copy 12.png>)
+
+**Применяем оверлей production**
+
+Флаг -k — это «kustomize mode» (режим Kustomize) в kubectl. Он сам внутренне выполнит kustomize build и применит результат.
+
+
+
+
+
+![alt text](<img/1/image copy 14.png>)
+
+3 пода gateway-service (это и есть патч на 3 реплики) и по одному каждого из остальных. 
+
+
+
+
+
+
+
+
+
+![alt text](<img/1/image copy 15.png>)
+
+gateway-service   3/3 (3 готовых из 3) и 1/1 у всех остальных.
+
+
+
+
+
+
+
+
+
+
+
+
+![alt text](<img/1/image copy 16.png>)
+
+**все результаты 200/201 - УСПЕШНО!**
+
+
+
+
+
+
+
+
 
 
 
