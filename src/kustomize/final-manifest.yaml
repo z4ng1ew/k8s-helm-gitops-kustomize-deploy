@@ -112,12 +112,12 @@ metadata:
     app: postgres
   name: postgres
 spec:
+  clusterIP: None
   ports:
   - port: 5432
     targetPort: 5432
   selector:
     app: postgres
-  type: ClusterIP
 ---
 apiVersion: v1
 kind: Service
@@ -126,6 +126,7 @@ metadata:
     app: rabbitmq
   name: rabbitmq
 spec:
+  clusterIP: None
   ports:
   - name: amqp
     port: 5672
@@ -135,7 +136,6 @@ spec:
     targetPort: 15672
   selector:
     app: rabbitmq
-  type: ClusterIP
 ---
 apiVersion: v1
 kind: Service
@@ -189,18 +189,6 @@ spec:
           values:
           - k3s-master
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: manual
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
   storageClassName: manual
 ---
 apiVersion: apps/v1
@@ -525,90 +513,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: postgres
-  name: postgres
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgres
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        app: postgres
-    spec:
-      containers:
-      - env:
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              key: POSTGRES_USER
-              name: app-secrets
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: POSTGRES_PASSWORD
-              name: app-secrets
-        - name: POSTGRES_DB
-          value: postgres
-        - name: PGDATA
-          value: /var/lib/postgresql/data/pgdata
-        image: src-postgres:latest
-        imagePullPolicy: Never
-        name: postgres
-        ports:
-        - containerPort: 5432
-        volumeMounts:
-        - mountPath: /var/lib/postgresql/data
-          name: postgres-storage
-      nodeSelector:
-        kubernetes.io/hostname: k3s-master
-      volumes:
-      - name: postgres-storage
-        persistentVolumeClaim:
-          claimName: postgres-pvc
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: rabbitmq
-  name: rabbitmq
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: rabbitmq
-  template:
-    metadata:
-      labels:
-        app: rabbitmq
-    spec:
-      containers:
-      - env:
-        - name: RABBITMQ_DEFAULT_USER
-          valueFrom:
-            secretKeyRef:
-              key: RABBIT_MQ_USER
-              name: app-secrets
-        - name: RABBITMQ_DEFAULT_PASS
-          valueFrom:
-            secretKeyRef:
-              key: RABBIT_MQ_PASSWORD
-              name: app-secrets
-        image: rabbitmq:3.12-management-alpine
-        imagePullPolicy: Never
-        name: rabbitmq
-        ports:
-        - containerPort: 5672
-        - containerPort: 15672
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
     app: report-service
   name: report-service
 spec:
@@ -726,6 +630,96 @@ spec:
         name: session-service
         ports:
         - containerPort: 8081
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: postgres
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  serviceName: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_USER
+              name: app-secrets
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: app-secrets
+        - name: POSTGRES_DB
+          value: postgres
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        image: src-postgres:latest
+        imagePullPolicy: Never
+        name: postgres
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-storage
+      nodeSelector:
+        kubernetes.io/hostname: k3s-master
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi
+      storageClassName: manual
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: rabbitmq
+  name: rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  serviceName: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+      - env:
+        - name: RABBITMQ_DEFAULT_USER
+          valueFrom:
+            secretKeyRef:
+              key: RABBIT_MQ_USER
+              name: app-secrets
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              key: RABBIT_MQ_PASSWORD
+              name: app-secrets
+        image: rabbitmq:3.12-management-alpine
+        imagePullPolicy: Never
+        name: rabbitmq
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
