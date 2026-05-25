@@ -67,10 +67,6 @@ nohup.out
 *.tar
 
 
-src/img/*copy*
-src/img/*copy*
-src/img/*~
-
 
 .git/
 .gitattributes
