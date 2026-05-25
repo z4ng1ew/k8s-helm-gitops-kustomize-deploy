@@ -10,11 +10,11 @@ spec:
   capacity:
     storage: 5Gi
   accessModes:
-    - ReadWriteOnce          
-  persistentVolumeReclaimPolicy: Retain 
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
   hostPath:
     path: /var/lib/postgres-pv
-    type: DirectoryOrCreate  
+    type: DirectoryOrCreate
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -22,16 +22,4 @@ spec:
             - key: kubernetes.io/hostname
               operator: In
               values:
-                - k3s-master   
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-spec:
-  storageClassName: manual
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
+                - k3s-master

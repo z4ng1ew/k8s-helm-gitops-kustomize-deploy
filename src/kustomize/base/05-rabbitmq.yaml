@@ -1,15 +1,37 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
   name: rabbitmq
-  labels: { app: rabbitmq }
+  labels:
+    app: rabbitmq
 spec:
+  clusterIP: None              
+  selector:
+    app: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+    - name: management
+      port: 15672
+      targetPort: 15672
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+  labels:
+    app: rabbitmq
+spec:
+  serviceName: rabbitmq
   replicas: 1
   selector:
-    matchLabels: { app: rabbitmq }
+    matchLabels:
+      app: rabbitmq
   template:
     metadata:
-      labels: { app: rabbitmq }
+      labels:
+        app: rabbitmq
     spec:
       containers:
         - name: rabbitmq
@@ -23,19 +45,3 @@ spec:
               valueFrom: { secretKeyRef: { name: app-secrets, key: RABBIT_MQ_USER } }
             - name: RABBITMQ_DEFAULT_PASS
               valueFrom: { secretKeyRef: { name: app-secrets, key: RABBIT_MQ_PASSWORD } }
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: rabbitmq
-  labels: { app: rabbitmq }
-spec:
-  selector: { app: rabbitmq }
-  ports:
-    - name: amqp
-      port: 5672
-      targetPort: 5672
-    - name: management
-      port: 15672
-      targetPort: 15672
-  type: ClusterIP
