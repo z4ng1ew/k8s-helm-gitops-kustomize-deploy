@@ -365,9 +365,9 @@ gateway-service   3/3 (3 готовых из 3) и 1/1 у всех осталь�
 
 
 
+![alt text](<img/image copy 4.png>)
 
-
-
+**Веб-версия результатов теста**
 
 
 
@@ -856,6 +856,32 @@ kubectl get pods -n hotels -w
 
 
 
+![alt text](<img/1/image copy 19.png>)
+
+**Меняем gateway: 1 → 2**
+
+
+
+
+![alt text](<img/1/image copy 21.png>)
+
+**Применяем**
+
+
+
+
+
+
+
+
+
+![alt text](img/image.png)
+
+**Проверил, что реплик стало 2**
+
+
+kubectl get deployment — gateway 2/2
+helm history — две ревизии (revision 1 = superseded, revision 2 = deployed)
 
 
 
@@ -866,3 +892,11 @@ kubectl get pods -n hotels -w
 
 
 ## 10. Запустить функциональные тесты Postman и удостовериться в работоспособности приложения.
+
+
+![alt text](<img/image copy 2.png>)
+
+
+![alt text](<img/image copy 3.png>)
+
+

@@ -7,7 +7,7 @@ replicaCount:
   payment: 1
   loyalty: 1
   report: 1
-  gateway: 1
+  gateway: 2
 
 image:
   pullPolicy: Never
