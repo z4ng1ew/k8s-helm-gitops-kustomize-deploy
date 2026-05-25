@@ -899,4 +899,4 @@ helm history — две ревизии (revision 1 = superseded, revision 2 = de
 
 ![alt text](<img/image copy 3.png>)
 
-
+**Веб версия ньюман, результаты тоже 200/201**
