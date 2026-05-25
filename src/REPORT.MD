@@ -585,10 +585,14 @@ values.yaml - значения для подстановки в шаблоны.
 
 
 
+Превратил манифесты в шаблоны
+
+![alt text](<img/2/image copy 9.png>)
 
 
 
 
+Для примера смотрим:
 
 ![alt text](<img/2/image copy 6.png>)
 
@@ -597,7 +601,116 @@ values.yaml - значения для подстановки в шаблоны.
 
 
 
+
+
+
 ![alt text](<img/2/image copy 7.png>)
+
+
+
+
+Переписал Ingress на шаблон
+
+
+- {{- if .Values.ingress.enabled }} — условный блок. Если в values.yaml написано ingress.enabled: false, весь блок до {{- end }} пропустится, и Ingress не создастся. Это мощный приём: одним флагом включаем/выключаем целые куски.
+- Дефис - в {{- убирает пустую строку, которая появляется в результате. Это косметика.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+![alt text](<img/2/image copy 11.png>)
+
+**Исравил Chart.yaml**
+
+
+- apiVersion: v2 — современная схема Helm 3 (v1 была у Helm 2)
+- version — версия чарта. Меняется при правке шаблонов.
+- appVersion — версия самого приложения, которое чарт разворачивает. Независимая от version.
+- type: application — обычное приложение (есть ещё library — библиотечный чарт без шаблонов)
+
+
+
+
+
+
+![alt text](<img/2/image copy 12.png>)
+
+
+Удалил артефакты helm create
+helm create сгенерировал несколько файлов, которые не нужны в проекте:
+
+```
+cd ~/do_12/src/hotels-app
+
+# Удаляем папку tests/ — там был дефолтный шаблон connection-теста
+rm -rf templates/tests/
+
+# Удаляем _helpers.tpl —  не использую helper-функции
+rm -f templates/_helpers.tpl
+
+# NOTES.txt можно было оставить, но я удалил
+rm -f templates/NOTES.txt
+
+# charts/ — для зависимостей. У меня их нет.
+rm -rf charts/
+```
+
+
+
+
+![alt text](<img/2/image copy 15.png>)
+
+**осталось 13 файлов в templates**
+
+
+
+
+
+![alt text](<img/2/image copy 16.png>)
+
+
+
+**helm lint .    ---  1 chart(s) linted, 0 chart(s) failed**
+
+
+
+
+
+![alt text](<img/2/image copy 17.png>)
+
+
+**Шаблоны рендерятся без ошибок**
+
+
+В блоке Ingress подставлены session.10.174.8.95.nip.io и gateway.10.174.8.95.nip.io.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -612,10 +725,144 @@ values.yaml - значения для подстановки в шаблоны.
 
 ## 6. Упаковать *helm*-чарт с помощью команды `helm package` для создания файла `*.tgz`, содержащего чарт и его зависимости.
 
+
+
+![alt text](<img/2/image copy 18.png>)
+
+архив создан
+
+упаковываем чарт и затем устанавливаем
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 7. Развернуть *helm*-чарт в кластере Kubernetes с помощью команды `helm install`. Указать произвольный `namespace` и `release-name`.
+
+
+
+
+![alt text](<img/2/image copy 19.png>)
+
+
+Создаём namespace для нашего релиза
+
+
+```
+s@Vivo:~/do_12/src$ kubectl create namespace hotels
+namespace/hotels created
+```
+
+
+
+
+
+
+
+
+
+
+![alt text](<img/2/image copy 20.png>)
+
+**helm install со статусом deployed.**
+
+
+
+
+
+
+
 
 ## 8. Проверить статус развернутого приложения при помощи команды `kubectl get`. Результаты представить в отчете.
 
+
+
+
+
+![alt text](<img/2/image copy 21.png>)
+
+```
+helm list -A
+helm status my-hotels -n hotels
+```
+
+**Смотрим что Helm знает**
+
+
+
+
+
+
+
+```
+kubectl get all -n hotels
+kubectl get pods -n hotels -w
+```
+
+**Что в кластере**
+
+![alt text](<img/2/image copy 22.png>)
+
+
+![alt text](<img/2/image copy 23.png>)
+
+
+
+![alt text](<img/2/image copy 24.png>)
+
+
+
+
 ## 9. Внести как минимум одно изменение в `values.yaml` и выполнить команду `helm upgrade`. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## 10. Запустить функциональные тесты Postman и удостовериться в работоспособности приложения.
