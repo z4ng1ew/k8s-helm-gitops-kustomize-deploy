@@ -1025,7 +1025,39 @@ helm history — две ревизии (revision 1 = superseded, revision 2 = de
 
 
 
-## Бонус (реализовал для себя). Kustomize cо StatefulSet
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Бонус: применение обратной связи от пира из DO11 — StatefulSet для PostgreSQL и RabbitMQ
+
+Реализован более подходящую архитектурную вместо того что бы  использовать Deployment для stateful-нагрузок 
+(БД, очереди) — это антипаттерн. В DO12 я учёл это  и перевёл PostgreSQL и RabbitMQ на StatefulSet + Headless Service.
+
+
+
 
 **Теория**
 
@@ -1044,7 +1076,21 @@ StatefulSet делает поды с устойчивой идентичност
 - Порядок старта/остановки гарантирован: -0 → -1 → -2
 
 
+**Headless Service** (буквально «безголовый») — это Service без 
+ClusterIP. Создаётся флагом `clusterIP: None`. Зачем он нужен 
+для StatefulSet:
 
+- Обычный Service даёт **один виртуальный IP** для всей группы 
+  подов и балансирует трафик случайно. Кто конкретно ответит — 
+  неизвестно.
+- Headless Service даёт **прямой DNS к каждому конкретному поду**: 
+  `postgres-0.postgres.default.svc.cluster.local`.
+- StatefulSet требует Headless Service в поле `serviceName` — это 
+  обязательное условие.
+
+Для нашей одной реплики разница маленькая, но если завтра 
+понадобится Primary + Replica у PostgreSQL — клиенты смогут 
+адресовать конкретно `postgres-0` (мастер) и `postgres-1` (реплика).
 
 
 
@@ -1148,3 +1194,78 @@ Deployment с PVC для PostgreSQL — это антипаттерн. В DO12 �
 
 
 ## То же самое для Helm (StatefulSet)
+
+![alt text](<img/image copy 16.png>)
+
+Шаблонизировал постгресс и раббит.
+
+
+![alt text](<img/image copy 9.png>)
+
+ls -la *.tgz — новый архив 0.2.0.
+
+
+
+![alt text](<img/image copy 10.png>)
+
+**заново создаю неймспейс**
+
+
+
+
+
+
+
+
+
+![alt text](<img/image copy 11.png>)
+
+Устанавл и проверил
+
+Главное —  внимание на имена:
+
+postgres-0 (раньше было postgres-f7896fb9d-xxx)
+rabbitmq-0 (раньше было rabbitmq-746df59b5c-xxx)
+Остальные сервисы — с хэш-суффиксами, как и были (потому что они остались Deployment'ами)
+
+
+
+
+
+
+
+
+
+
+
+![alt text](<img/image copy 12.png>)
+
+видны и StatefulSet (postgres, rabbitmq), и Deployment (остальные 7)
+
+
+
+
+
+
+![alt text](<img/image copy 13.png>)
+
+видны имена postgres-0, rabbitmq-0
+
+
+
+
+![alt text](<img/image copy 14.png>)
+
+
+виден автосозданный PVC с именем  postgres-storage-postgres-0
+
+
+
+
+
+
+**Postman**
+
+![alt text](<img/image copy 15.png>)
+
+5/5   зелёные.

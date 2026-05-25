@@ -20,7 +20,7 @@ metadata:
     app: postgres
 spec:
   serviceName: postgres        
-  replicas: 1
+  replicas: {{ .Values.replicaCount.postgres }}
   selector:
     matchLabels:
       app: postgres
@@ -33,8 +33,8 @@ spec:
         kubernetes.io/hostname: k3s-master
       containers:
         - name: postgres
-          image: src-postgres:latest
-          imagePullPolicy: Never
+          image: {{ .Values.image.postgres }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 5432
           env:

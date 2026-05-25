@@ -24,7 +24,7 @@ metadata:
     app: rabbitmq
 spec:
   serviceName: rabbitmq
-  replicas: 1
+  replicas: {{ .Values.replicaCount.rabbitmq }}
   selector:
     matchLabels:
       app: rabbitmq
@@ -35,8 +35,8 @@ spec:
     spec:
       containers:
         - name: rabbitmq
-          image: rabbitmq:3.12-management-alpine
-          imagePullPolicy: Never
+          image: {{ .Values.image.rabbitmq }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 5672
             - containerPort: 15672
