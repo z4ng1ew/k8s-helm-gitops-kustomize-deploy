@@ -1009,3 +1009,142 @@ helm history — две ревизии (revision 1 = superseded, revision 2 = de
 ![alt text](<img/image copy 3.png>)
 
 **Веб версия ньюман, результаты тоже 200/201**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Бонус (реализовал для себя). Kustomize cо StatefulSet
+
+**Теория**
+
+Главное отличие
+Deployment делает поды взаимозаменяемыми:
+
+- Имена случайные: postgres-7f8c9-abcde, postgres-7f8c9-xyz12
+- Если под умрёт — k8s создаст новый под с новым именем и новым IP
+- Все поды одного Deployment одинаковые — k8s не различает их
+
+StatefulSet делает поды с устойчивой идентичностью:
+
+- Имена предсказуемые: postgres-0, postgres-1, postgres-2
+- Если postgres-0 умрёт — новый под получит то же имя postgres-0
+- Каждому поду — свой собственный PVC (через volumeClaimTemplates)
+- Порядок старта/остановки гарантирован: -0 → -1 → -2
+
+
+
+
+
+
+[text](kustomize/base/04-postgres.yaml)
+
+/home/s/do_12/src/kustomize/base/04-postgres.yaml
+
+
+
+
+[text](kustomize/base/03-postgres-pv.yaml)
+
+/home/s/do_12/src/kustomize/base/03-postgres-pv.yaml
+
+
+
+
+
+
+
+Отдельный PVC в 03-postgres-pv.yaml больше не нужен. Но сам PV нужен, потому что volumeClaimTemplate будет требовать том на 5Gi с storageClassName: manual, а его кто-то должен предоставить.
+
+
+
+/home/s/do_12/src/kustomize/base/05-rabbitmq.yaml
+
+[text](kustomize/base/05-rabbitmq.yaml)
+
+
+PVC я не добавлял для RabbitMQ — он у меня в учебной задаче работает на emptyDir (временной памяти пода), как и было в DO11. Для production обязательно был бы PVC, но методичка этого не требовала. Достаточно того, что я перевел на StatefulSet — это уже архитектурно правильно.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+![alt text](<img/image copy 5.png>)
+
+StatefulSet: postgres 1/1, rabbitmq 1/1
+
+
+
+
+
+
+
+
+![alt text](<img/image copy 6.png>)
+
+
+Pods: postgres-0, rabbitmq-0 (а не postgres-7f8c9-xxx как раньше!)
+
+
+
+
+
+
+
+![alt text](<img/image copy 7.png>)
+
+
+PVC: postgres-storage-postgres-0 (автосозданный)
+
+
+
+
+Deployment с PVC для PostgreSQL — это антипаттерн. В DO12 я переработал манифесты: PostgreSQL и RabbitMQ теперь развёрнуты через StatefulSet с Headless Service. PVC автоматически создаётся через volumeClaimTemplates. На production-нагрузке это даст возможность безопасно масштабировать БД и собирать RabbitMQ-кластер. У нас всё ещё одна реплика — но архитектура готова к росту.
+
+
+
+
+
+![alt text](<img/image copy 8.png>)
+
+5/5  проходит, как и раньше — для приложения снаружи ничего не изменилось.
+
+
+
+
+
+
+
+
+
+
+## То же самое для Helm (StatefulSet)
